@@ -5,7 +5,7 @@ from matplotlib.widgets import Slider, Button
 
 # Parameters (adjustable via sliders)
 nx, ny = 200, 200          # Grid size
-Q = 5                      # Number of grains (order parameters)
+Q = 10                      # Number of grains (order parameters)
 dx = dy = 0.1              # Space steps
 dt = 0.001                   # Time step
 steps_per_frame = 10        # Simulation steps per animation frame
@@ -67,10 +67,10 @@ slider_rate_ax = plt.axes([0.15, 0.02, 0.7, 0.03])
 reset_ax = plt.axes([0.87, 0.02, 0.1, 0.08])
 
 # Sliders
-slider_alpha = Slider(slider_alpha_ax, 'Alpha', 0.0, 5.0, valinit=alpha_init)
-slider_beta = Slider(slider_beta_ax, 'Beta', 0.0, 5.0, valinit=beta_init)
-slider_gamma = Slider(slider_gamma_ax, 'Gamma', 0.0, 5.0, valinit=gamma_init)
-slider_kappa = Slider(slider_kappa_ax, 'Kappa', 0.0, 5.0, valinit=kappa_init)
+slider_alpha = Slider(slider_alpha_ax, 'Alpha', 0.0, 50.0, valinit=alpha_init)
+slider_beta = Slider(slider_beta_ax, 'Beta', 0.0, 50.0, valinit=beta_init)
+slider_gamma = Slider(slider_gamma_ax, 'Gamma', 0.0, 50.0, valinit=gamma_init)
+slider_kappa = Slider(slider_kappa_ax, 'Kappa', 0.0, 50.0, valinit=kappa_init)
 slider_rate = Slider(slider_rate_ax, 'Sim Rate', 1, 30, valinit=steps_per_frame, valfmt='%0.0f')
 
 # Reset button
@@ -105,9 +105,6 @@ def animate(frame):
     for _ in range(steps):
         h = update_order_parameters(h, alpha, beta, gamma, kappa_array, L_array)
         simulation_time += dt
-        # Apply absolute value at t = 15.0
-        if simulation_time >= 15.0:
-            h = np.abs(h)
 
     im.set_data(np.argmax(h, axis=0))
     time_text.set_text(f"Time: {simulation_time:.2f}")
