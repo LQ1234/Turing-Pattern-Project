@@ -21,6 +21,11 @@ def initialize_layers():
     c_init = np.zeros((Q, nx, ny))
     # c_init = np.random.rand(Q, nx, ny)  # Random initialization
     c_init[0] = 1.0  # Bottom layer is filled
+
+    #c_init[:,0,0] = 1.0
+    c_init += np.random.rand(Q, nx, ny) * 0.05
+    
+
     return c_init
 
 c = initialize_layers()
@@ -54,46 +59,53 @@ def update_layers(c, K, beta, gamma, alpha):
 
     print("-----")
     for i in range(Q):
-        print(f"Layer {i} = {np.mean(c[i]):0.3f}:", end=" ")
-        # Compute the derivative of the energy functional with respect to c_i
-        term1 = - K * lap_c[i]
-        term2 = - beta * ( 1 -  c[i])
-        print(f"Term 1 = {np.mean(term1):0.3f}, Term 2 = {np.mean(term2):0.3f}", end=" ")
+        # print(f"Layer {i} = {np.mean(c[i]):0.3f}:", end=" ")
+        # # Compute the derivative of the energy functional with respect to c_i
+        # term1 = - K * lap_c[i]
+        # term2 = 0#beta * ( 1 -  c[i])
+        # print(f"Term 1 = {np.mean(term1):0.3f}, Term 2 = {np.mean(term2):0.3f}", end=" ")
 
-        # Compute the cumulative product up to i-1
-        cumulative_product = np.ones((nx, ny))
+        # # Compute the cumulative product up to i-1
+        # cumulative_product = np.ones((nx, ny))
+        # if i > 0:
+        #     for k in range(i):
+        #         cumulative_product *= N_c[k]
+
+        # # First part involving dN_1_minus_dc[i] 
+        # term3 = cumulative_product * dN_1_minus_dc[i]
+        # print(f"Term 3 = {np.mean(term3):0.3f}", end=" ")
+
+        # print(f"Term 4 = ", end=" ")
+
+        # # Second part involving the sum over j > i
+        # term4 = np.zeros((nx, ny))
+        # for j in range(i + 1, Q):
+        #     # Compute the cumulative product up to j-1 excluding c_i
+        #     cumulative_product_j = np.ones((nx, ny))
+        #     for k in range(j):
+        #         if k != i:
+        #             cumulative_product_j *= N_c[k]
+        #     cumulative_product_j *= N_1_minus_c[j]
+        #     # Compute the factor for c_i
+        #     factor = cumulative_product_j * dN_dc[i]
+        #     term4 += factor
+        #     print(f"({j}) = {np.mean(factor):0.3f}", end=" ")
+        # term4 = 0
+        # print(f"Term 4 = {np.mean(term4):0.3f}", end=" ")
+
+        # # Total derivative
+        # dF_dci = term1 + term2 + gamma * (term3 + term4)
+        # print(f"dF_dci = {np.mean(dF_dci):0.3f}")
+
+        # # Update c_i
+        # dc_dt[i] = - dF_dci
+
+        g = lambda x: 1 / (1 + np.exp(-30 * (x - 0.85)))
+        dc_dt[i] = K * lap_c[i]
         if i > 0:
-            for k in range(i):
-                cumulative_product *= N_c[k]
+            dc_dt[i] += beta * g(c[i-1]) * (1 - c[i] )
+            dc_dt[i] -= gamma *  g(c[i-1]) * c[i] * (1 - c[i]) * (1 - 2 * c[i])
 
-        # First part involving dN_1_minus_dc[i]
-        term3 = cumulative_product * dN_1_minus_dc[i]
-        print(f"Term 3 = {np.mean(term3):0.3f}", end=" ")
-
-        print(f"Term 4 = ", end=" ")
-
-        # Second part involving the sum over j > i
-        term4 = np.zeros((nx, ny))
-        for j in range(i + 1, Q):
-            # Compute the cumulative product up to j-1 excluding c_i
-            cumulative_product_j = np.ones((nx, ny))
-            for k in range(j):
-                if k != i:
-                    cumulative_product_j *= N_c[k]
-            cumulative_product_j *= N_1_minus_c[j]
-            # Compute the factor for c_i
-            factor = cumulative_product_j * dN_dc[i]
-            term4 += factor
-            print(f"({j}) = {np.mean(factor):0.3f}", end=" ")
-        term4 = 0
-        print(f"Term 4 = {np.mean(term4):0.3f}", end=" ")
-
-        # Total derivative
-        dF_dci = term1 + term2 + gamma * (term3 + term4)
-        print(f"dF_dci = {np.mean(dF_dci):0.3f}")
-
-        # Update c_i
-        dc_dt[i] = - dF_dci
 
     # Update c with time step
     c_new = c + dc_dt * dt
